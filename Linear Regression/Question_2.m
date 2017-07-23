@@ -1,0 +1,291 @@
+%-------------------------------------------------------------------%
+% Module: GI07 - Mathematical Programming & Research Methods
+% Assignment : Homework 1
+% Author : Russel Stuart Daries
+% Student ID: 16079408
+% Question: 2
+% Section: Linear Regression
+% Description: Linear Regression implementation
+% ------------------------------------------------------------------%
+
+close all
+clear all
+clc
+
+%%
+%2a - Function defined as noise_function
+
+%2b. 
+mu = 0;
+sigma = 0.07;
+x_rand = rand([30,1]);
+x_smooth = linspace(0,1);
+
+for i=1:length(x_rand)
+    g_x_noise(i) = (sin(2*pi*x_rand(i)))^2 + noise_function(mu,sigma); 
+end
+g_x_noise = g_x_noise';
+g_x_smooth = (sin(2*pi*x_smooth)).^2;
+
+%2.b.i
+figure;
+scatter(x_rand,g_x_noise,'b') % Generated Data set S
+hold on
+plot(x_smooth,g_x_smooth,'r') % Smoothed Sin curve
+grid on
+set(gcf, 'Color', 'w');
+leg=legend('sin^2(2\pix)','S_{0.07,30}','Location','Best')
+set(leg,'FontSize',15)
+export_fig('/Users/russeldaries/Documents/University College London/Computer Science/Courses/Mathematical Methods for Machine Learning/Assignments/Assignment 1/Report/LaTeX/report/Figures/sin_with_data', '-eps')
+close
+
+% 2b.ii
+% k=2
+figure;
+scatter(x_rand,g_x_noise,'b')
+hold on
+PHI_k2 = poly_basis(2,x_rand);
+w_iter_k2 = (PHI_k2'*PHI_k2)\(PHI_k2'*g_x_noise); % Coefficients for eq 2b.ii
+y_k2 = basis_calc(w_iter_k2,x_smooth');
+hold on
+plot(x_smooth,y_k2,'g')
+
+% k=5
+PHI_k5 = poly_basis(5,x_rand);
+w_iter_k5 = (PHI_k5'*PHI_k5)\(PHI_k5'*g_x_noise); % Coefficients for eq eq 2b.ii
+y_k5 = basis_calc(w_iter_k5,x_smooth');
+plot(x_smooth,y_k5,'r')
+
+% k=10
+PHI_k10 = poly_basis(10,x_rand);
+[Q_10,R_10] = qr(PHI_k10); % QR decomposition
+w_iter_k10 = (R_10)\(Q_10'*g_x_noise); % Coefficients for eq eq 2b.ii
+y_k10 = basis_calc(w_iter_k10,x_smooth');
+plot(x_smooth,y_k10,'m')
+
+% k=14
+PHI_k14 = poly_basis(14,x_rand);
+[Q_14,R_14] = qr(PHI_k14); % QR decomposition
+w_iter_k14 = (R_14)\(Q_14'*g_x_noise); % Coefficients for eq eq 2b.ii
+y_k14 = basis_calc(w_iter_k14,x_smooth');
+plot(x_smooth,y_k14,'c')
+
+% k=18
+PHI_k18 = poly_basis(18,x_rand);
+[Q_18,R_18] = qr(PHI_k18); % QR decomposition
+w_iter_k18 = (R_18)\(Q_18'*g_x_noise); % Coefficients for eq eq 2b.ii
+y_k18 = basis_calc(w_iter_k18,x_smooth');
+plot(x_smooth,y_k18,'k')
+ylim([-0.25 1.5])
+hold off
+grid on;
+set(gcf, 'Color', 'w');
+leg=legend('S_{0.07,30}','k=2','k=5','k=10','k=14','k=18','Location','North')
+set(leg,'FontSize',15)
+export_fig('/Users/russeldaries/Documents/University College London/Computer Science/Courses/Mathematical Methods for Machine Learning/Assignments/Assignment 1/Report/LaTeX/report/Figures/k_dim_ini', '-eps')
+close
+
+%2c.
+for i=1:18
+    PHI = poly_basis(i,x_rand);
+    [Q,R] = qr(PHI); % QR decomposition
+    w_iter = (R)\(Q'*g_x_noise); 
+    SSE_k(i) = sum((g_x_noise-(PHI*w_iter)).^2);
+    MSE_k(i) = SSE_k(i)/length(g_x_noise);
+end
+% Plot of MSE for Polynomial basis k=1,...,18 on training set
+dim_k = 1:18;
+plot(dim_k,log(MSE_k),'b')
+xlabel('Polynomial basis (k)','FontSize',15)
+ylabel('log( te_{k}(S) )','FontSize',15)
+axis tight;
+grid on
+hold off
+set(gcf, 'Color', 'w');
+export_fig('/Users/russeldaries/Documents/University College London/Computer Science/Courses/Mathematical Methods for Machine Learning/Assignments/Assignment 1/Report/LaTeX/report/Figures/k_dim_18', '-eps')
+close
+%2d.
+
+x_rand_1000 = rand([1000,1]);
+for i=1:length(x_rand_1000)
+    g_x_noise_1000(i) = (sin(2*pi*x_rand_1000(i)))^2 + noise_function(mu,sigma); % Generated test set T
+end
+g_x_noise_1000 = g_x_noise_1000';
+
+for i=1:18
+    PHI_train = poly_basis(i,x_rand);
+    [Q,R] = qr(PHI_train); 
+    w_iter_train = (R)\(Q'*g_x_noise); %Coefficients of w based on training data
+    PHI_1000 = poly_basis(i,x_rand_1000);
+    SSE_k_1000(i) = sum((g_x_noise_1000-(PHI_1000*w_iter_train)).^2);
+    MSE_k_1000(i) = SSE_k_1000(i)/length(g_x_noise_1000);
+end
+% Plot of MSE for Polynomial basis k=1,...,18 on test set
+figure;
+plot(dim_k,log(MSE_k_1000),'b')
+xlabel('Polynomial basis (k)','FontSize',15)
+ylabel('log( tse_{k}(S,T) )','FontSize',15)
+axis tight;
+grid on
+hold off
+set(gcf, 'Color', 'w');
+export_fig('/Users/russeldaries/Documents/University College London/Computer Science/Courses/Mathematical Methods for Machine Learning/Assignments/Assignment 1/Report/LaTeX/report/Figures/k_dim_18_test', '-eps')
+close
+%2e.
+MSE_100 = [];
+MSE_1000 = [];
+
+% Resultant MSE averaged for 100 runs
+for j = 1:100
+    x_rand_repeat_100 = rand([100,1]);
+    x_rand_repeat_1000 = rand([1000,1]);
+    g_x_noise_repeat_100 = [];    
+
+    for k=1:length(x_rand_repeat_100)
+        g_x_noise_repeat_100(k) = (sin(2*pi*x_rand_repeat_100(k)))^2 + noise_function(mu,sigma);
+    end
+    g_x_noise_repeat_100 = g_x_noise_repeat_100';        
+        
+    g_x_noise_repeat_1000 = [];    
+    for m=1:length(x_rand_repeat_1000)
+        g_x_noise_repeat_1000(m) = (sin(2*pi*x_rand_repeat_1000(m)))^2 + noise_function(mu,sigma);
+    end
+    g_x_noise_repeat_1000 = g_x_noise_repeat_1000';
+    SSE_k_repeat_100 = [];
+    MSE_k_repeat_100 = [];
+    SSE_k_repeat_1000 = [];
+    MSE_k_repeat_1000 = [];
+    
+    for i=1:18
+        PHI_repeat_100 = poly_basis(i,x_rand_repeat_100);
+        [Q,R] = qr(PHI_repeat_100); 
+        w_iter_repeat_100 = (R)\(Q'*g_x_noise_repeat_100); 
+    
+        SSE_k_repeat_100(i) = sum((g_x_noise_repeat_100-(PHI_repeat_100*w_iter_repeat_100)).^2);
+        MSE_k_repeat_100(i) = SSE_k_repeat_100(i)/length(g_x_noise_repeat_100);
+        
+        PHI_repeat_1000 = poly_basis(i,x_rand_repeat_1000);
+        SSE_k_repeat_1000(i) = sum((g_x_noise_repeat_1000-(PHI_repeat_1000*w_iter_repeat_100)).^2);
+        MSE_k_repeat_1000(i) = SSE_k_repeat_1000(i)/length(g_x_noise_repeat_1000);
+    end
+    MSE_100 = [MSE_100; MSE_k_repeat_100];
+    MSE_1000 = [MSE_1000; MSE_k_repeat_1000];
+    
+end
+% Resultant MSE for 100 runs for Training and Test set
+figure;
+MSE_100_avg = mean(MSE_100);
+MSE_1000_avg = mean(MSE_1000);
+plot(dim_k,log(MSE_100_avg),'b')
+hold on
+plot(dim_k,log(MSE_1000_avg),'r')
+xlabel('Polynomial basis (k)','FontSize',15)
+ylabel('log(MSE_{avg})','FontSize',15)
+axis tight;
+grid on
+hold off
+set(gcf, 'Color', 'w');
+leg=legend('te_{k}(S)_{avg}','tse_{k}(S,T)_{avg}','Location','Best')
+set(leg,'FontSize',15)
+export_fig('/Users/russeldaries/Documents/University College London/Computer Science/Courses/Mathematical Methods for Machine Learning/Assignments/Assignment 1/Report/LaTeX/report/Figures/k_dim_100', '-eps')
+close
+
+%3.
+for i=1:18
+    PHI_sin = sin_basis(i,x_rand);
+    [Q,R] = qr(PHI_sin); 
+    w_iter_sin = (R)\(Q'*g_x_noise);
+    SSE_k_sin(i) = sum((g_x_noise-(PHI_sin*w_iter_sin)).^2);
+    MSE_k_sin(i) = SSE_k_sin(i)/length(g_x_noise);
+end
+% Plot of MSE for Sin basis k=1,...,18 on training set
+dim_k = 1:18;
+figure;
+plot(dim_k,log(MSE_k_sin),'b')
+xlabel('Sin basis (k)','FontSize',15)
+ylabel('log( te_{k}(S) )','FontSize',15)
+axis tight;
+grid on
+hold off
+set(gcf, 'Color', 'w');
+export_fig('/Users/russeldaries/Documents/University College London/Computer Science/Courses/Mathematical Methods for Machine Learning/Assignments/Assignment 1/Report/LaTeX/report/Figures/k_dim_18_sin', '-eps')
+close
+% Expanding basis for k->18
+for i=1:18
+    PHI_train_sin = sin_basis(i,x_rand);
+    [Q,R] = qr(PHI_train_sin); 
+    w_iter_train_sin = (R)\(Q'*g_x_noise); %Coefficients of w based on training data
+    PHI_1000 = sin_basis(i,x_rand_1000);
+    SSE_k_1000_sin(i) = sum((g_x_noise_1000-(PHI_1000*w_iter_train_sin)).^2);
+    MSE_k_1000_sin(i) = SSE_k_1000_sin(i)/length(g_x_noise_1000);
+end
+% Plot of MSE for Sin basis k=1,...,18 on test set
+figure;
+plot(dim_k,log(MSE_k_1000_sin),'r')
+xlabel('Sin basis (k)','FontSize',15)
+ylabel('log( tse_{k}(S,T) )','FontSize',15)
+axis tight;
+grid on
+hold off
+set(gcf, 'Color', 'w');
+export_fig('/Users/russeldaries/Documents/University College London/Computer Science/Courses/Mathematical Methods for Machine Learning/Assignments/Assignment 1/Report/LaTeX/report/Figures/k_dim_1000_sin', '-eps')
+close
+
+MSE_100_sin = [];
+MSE_1000_sin = [];
+
+% Computing results for 100 simulation runs
+for j = 1:100
+    x_rand_repeat_100_sin = rand([100,1]);
+    x_rand_repeat_1000_sin = rand([1000,1]);
+    g_x_noise_repeat_100_sin = [];    
+
+    for k=1:length(x_rand_repeat_100_sin)
+        g_x_noise_repeat_100_sin(k) = (sin(2*pi*x_rand_repeat_100_sin(k)))^2 + noise_function(mu,sigma);
+    end
+    g_x_noise_repeat_100_sin = g_x_noise_repeat_100_sin';        
+        
+    g_x_noise_repeat_1000_sin = [];    
+    for m=1:length(x_rand_repeat_1000_sin)
+        g_x_noise_repeat_1000_sin(m) = (sin(2*pi*x_rand_repeat_1000_sin(m)))^2 + noise_function(mu,sigma);
+    end
+    g_x_noise_repeat_1000_sin = g_x_noise_repeat_1000_sin';
+    SSE_k_repeat_100_sin = [];
+    MSE_k_repeat_100_sin = [];
+    SSE_k_repeat_1000_sin = [];
+    MSE_k_repeat_1000_sin = [];
+    
+    for i=1:18
+        PHI_repeat_100_sin = sin_basis(i,x_rand_repeat_100_sin);
+        [Q,R] = qr(PHI_repeat_100_sin); 
+        w_iter_repeat_100_sin = (R)\(Q'*g_x_noise_repeat_100_sin); 
+
+        SSE_k_repeat_100_sin(i) = sum((g_x_noise_repeat_100_sin-(PHI_repeat_100_sin*w_iter_repeat_100_sin)).^2);
+        MSE_k_repeat_100_sin(i) = SSE_k_repeat_100_sin(i)/length(g_x_noise_repeat_100_sin);
+        
+        PHI_repeat_1000_sin = sin_basis(i,x_rand_repeat_1000_sin);
+        SSE_k_repeat_1000_sin(i) = sum((g_x_noise_repeat_1000_sin-(PHI_repeat_1000_sin*w_iter_repeat_100_sin)).^2);
+        MSE_k_repeat_1000_sin(i) = SSE_k_repeat_1000_sin(i)/length(g_x_noise_repeat_1000_sin);
+    end
+    MSE_100_sin = [MSE_100_sin; MSE_k_repeat_100_sin];
+    MSE_1000_sin = [MSE_1000_sin; MSE_k_repeat_1000_sin];
+    
+end
+% Resultant MSE for 100 runs for Training and Test set with Sin basis
+figure;
+MSE_100_sin_avg = mean(MSE_100_sin);
+MSE_1000_sin_avg = mean(MSE_1000_sin);
+plot(dim_k,log(MSE_100_sin_avg),'b')
+hold on
+plot(dim_k,log(MSE_1000_sin_avg),'r')
+xlabel('Sin basis (k)','FontSize',15)
+ylabel('log(MSE_{avg})','FontSize',15)
+axis tight;
+grid on
+hold off
+set(gcf, 'Color', 'w');
+leg=legend('te_{k}(S)_{avg}','tse_{k}(S,T)_{avg}','Location','Best')
+set(leg,'FontSize',15)
+export_fig('/Users/russeldaries/Documents/University College London/Computer Science/Courses/Mathematical Methods for Machine Learning/Assignments/Assignment 1/Report/LaTeX/report/Figures/k_dim_100_sin', '-eps')
+close
+
